@@ -1,0 +1,8 @@
+Resources: 
+    # logical id 
+    MyS3Bucket:
+        Type: AWS::S3::Bucket 
+        Properties: 
+            BucketName: karan-test-bucket
+            # permissions
+            AccessControl: PublicRead 
