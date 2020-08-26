@@ -1,5 +1,5 @@
 <h3 align="center">EC2 Template</h3>
-<p align="center"></p>
+<p align="center"><img src="https://github.com/karankumarshreds/AWS-Cloudformation/blob/master/img/ec2-advance.PNG"/></p>
 
 This is general EC2 template for the above design: 
 

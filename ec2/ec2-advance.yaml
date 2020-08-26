@@ -21,8 +21,9 @@ Resources:
         Properties: 
             GroupDescription: Enable inbound SSH access via port 22 
             ## Ingress === inbound rules 
-            SecurityGroupInrgress: 
+            SecurityGroupIngress: 
                 - FromPort: 22
+                  ToPort: 22
                   ## allow from 
                   CidrIp: 0.0.0.0/0
                   IpProtocol: tcp 
@@ -37,10 +38,3 @@ Resources:
                   IpProtocol: tcp 
                   ## allow from 
                   CidrIp: 0.0.0.0/0
-
-
-
-
-
-
-
