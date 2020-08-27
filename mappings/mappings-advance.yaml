@@ -1,0 +1,38 @@
+Parameters: 
+    EnvironmentType: 
+        Description: Environment type for deployment 
+        Type: String
+        ## will be chosen by user from GUI
+        AllowedValues: [ production, development ]
+        ConstraintDescription: Can either be production or development
+
+Mappings: 
+    AWSRegionAMIs: 
+        us-east-1: 
+            ## amazon linux 2
+            HVM64: ami-07c8bc5c1ce9598c3
+        us-east-2: 
+            ## redhat 8 
+            HVM64: ami-0a54aef4ef3b5f881
+        us-west-1: 
+            ## ubuntu 18.4 
+            HVM64: ami-0bbe28eb2173f6167
+    EnvironmentInstanceType: 
+        development: 
+            instanceType: t2.micro 
+        production: 
+            instanceType: t2.small 
+
+Resources: 
+    MyEC2Instance: 
+        Type: AWS::EC2::Instance 
+        Properties: 
+            ## second argument will be chosen from the gui by user via Parameters
+            InstanceType: !FindInMap [EnvironmentInstanceType, !Ref 'EnvironmentType', instanceType]
+            ## will automatically use the region from where template is used 
+            ImageId: !FindInMap [AWSRegionAMIs, !Ref 'AWS::Region', HVM64]
+
+###############################################################
+## If used in 'us-east-2' and chosen 'development' from GUI: ##
+## This should create an REDHAT 8 instance of type t2.micro  ##
+###############################################################

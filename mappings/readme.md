@@ -1,4 +1,4 @@
-<h4>Mappings</h4>
+<h2>Mappings</h2>
 Mappings is a section of cloudformation to help you organize parameters by named keys and its corresponding values for each group.
 
 This is similar to parameters, but here the values are predefined and others who will be creating templates can use these predefined values. It'se similar to setting the environment variables to not hardcode the values everytime (to avoid errors).
@@ -29,10 +29,10 @@ Resources:
     MyEC2Instance: 
         Type: "AWS::EC2::Instance"
         Properties: 
-            ImageId: !FindInMap [ RegionMap, us-east1, 32 ]
+            ImageId: !FindInMap [ RegionMap, us-east-1, 32 ]
 ```
 
-<h3>Now let's say you want to take this further and make it more dynamic. </h3>
+<h5>Now let's say you want to take this further and make it more dynamic. </h5>
 Suppose you don't want to specify the region you're making the instance in and you want it to be automatically set to whichever region you are in: 
 
 ```yaml

@@ -1,0 +1,16 @@
+Mappings: 
+    # name of mapping
+    RegionMap: 
+        us-east-1: 
+            "32": "ami-6411e20d"
+            "64": "ami-7a11e213"
+        us-east-2: 
+            "32": "ami-c9c7978c"
+            "64": "ami-cfc7978a"
+Resources: 
+    MyEC2Instance: 
+        Type: "AWS::EC2::Instance"
+        Properties: 
+            ImageId: !FindInMap [ RegionMap, us-east-1, 32 ]
+
+# This will make an instance of AMI: "ami-6411e20d" in us-east-1
