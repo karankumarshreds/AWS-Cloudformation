@@ -42,3 +42,13 @@ Resources:
         Properties: 
             ImageId: !FindInMap [ RegionMap, !Ref "AWS::Region", 32 ]
 ```
+
+<h5>AWS::Region</h5> 
+
+This is what is called a *Pseudo Parameter*. These are provided by AWS an be dynamically used inside any of your template. Some of the common examples are: 
+
+1. AWS::AccountId
+2. AWS::NoValue 
+3. AWS::Region
+4. AWS::StackId 
+5. AWS::StackName 
