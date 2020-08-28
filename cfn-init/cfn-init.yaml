@@ -1,0 +1,13 @@
+## NOTE: Study ec2-user-data.yaml before this ##
+
+Resources: 
+    MyEC2Instance: 
+        Type: AWS::EC2::Instance 
+        Metadata: 
+            Comment: Install a simple php application 
+            AWS::CloudFormation::Init: 
+                config: 
+                    packages: 
+                        yum: 
+                            httpd: []
+                            php: []    

@@ -1,0 +1,10 @@
+Resources: 
+    MyInstance: 
+        Properties: 
+            ImageId: ami-a4c7edb2
+            InstanceType: t2.micro 
+            UserData: 
+                Fn::Base64: |
+                #!/bin/bash
+                yum install something
+                echo "and so on..."
