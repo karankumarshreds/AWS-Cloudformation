@@ -1,0 +1,57 @@
+## This will create a volume mount for an EC2 instance ##
+## ONLY IF "prod" environment is chosen as a parameter ##
+
+Mappings: 
+    AWSRegionAMIs: 
+        us-east-1: 
+            ## amazon linux 2
+            HVM64: ami-07c8bc5c1ce9598c3
+            zone: us-east-1a
+        us-east-2: 
+            ## redhat 8 
+            HVM64: ami-0a54aef4ef3b5f881
+            zone: us-east-2a
+        us-west-1: 
+            ## ubuntu 18.4 
+            HVM64: ami-0bbe28eb2173f6167
+            zone: us-east-3a
+
+Parameters: 
+    EnvironmentType: 
+        Description: Can either be test or prod 
+        Default: test 
+        Type: String 
+        AllowedValues: 
+            - test 
+            - prod 
+        ConstraintDescription: One out of test or prod must be chosen
+
+Conditions: 
+    # will be true if environment chosen by the user is prod
+    CreateExtraStuffForProd: !Equals [ !Ref EnvironmentType, prod ]        
+    # this true boolean value will be used further to decide 
+    
+Resources: 
+    MyEC2Instance: 
+        Type: AWS::EC2::Instance 
+        Properties: 
+            ImageId: !FindInMap [ AWSRegionAMIs, !Ref 'AWS::Region', HVM64 ]
+            InstanceType: t2.micro 
+            AvailabilityZone: !FindInMap [ AWSRegionAMIs, !Ref 'AWS::Region', zone ]
+    MyEC2InstanceVolume: 
+        Type: AWS::EC2::Volume 
+        Condition: CreateExtraStuffForProd
+        ## this will continue only if above is true
+        Properties: 
+            Size: 100
+            ## get att is similar to !Ref but it is used to call values locally
+            AvailabilityZone: !GetAtt MyEC2Instance.AvailabilityZone
+    MountPoint: 
+        Type: AWS::EC2::VolumeAttachment
+        Condition: CreateExtraStuffForProd
+        ## this will continue only if above is true
+        Properties: 
+            InstanceId: !Ref MyEC2Instance
+            VolumeId: !Ref MyEC2InstanceVolume
+            Device: /dev/sdh 
+
