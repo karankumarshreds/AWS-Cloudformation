@@ -1,0 +1,69 @@
+Resources:
+    MyEC2Instance:
+      Type: AWS::EC2::Instance 
+      Properties: 
+        # ImageId: ami-07c8bc5c1ce9598c3
+        ImageId: ami-0bbe28eb2173f6167
+        InstanceType: t2.micro
+        AvailabilityZone: us-east-2a
+        SecurityGroups: 
+          - !Ref MySecurityGroup
+        UserData: 
+            Fn::Base64: |
+                #!/bin/bash 
+                sudo apt install docker.io
+                sudo systemctl start docker
+                sudo systemctl enable docker
+                sudo docker run -it -p -d 3000:3000 kajolt/quest
+    
+    MySecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: Opening port 80 
+        SecurityGroupIngress: 
+          - FromPort: 80
+            ToPort: 80
+            CidrIp: 0.0.0.0/0
+            IpProtocol: tcp
+          - FromPort: 3000 
+            ToPort: 3000 
+            CidrIp: 0.0.0.0/0
+            IpProtocol: tcp 
+  
+    ALBListener:
+      Type: AWS::ElasticLoadBalancingV2::Listener
+      Properties:
+        DefaultActions:
+          - Type: forward
+            TargetGroupArn: !Ref EC2TargetGroup
+        LoadBalancerArn: !Ref ApplicationLoadBalancer
+        Port: 80
+        Protocol: HTTP
+  
+    ApplicationLoadBalancer:
+      Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+      Properties:
+        Scheme: internet-facing 
+        Subnets:
+        - subnet-7d4a4a07
+        - subnet-da35feb1
+        SecurityGroups:
+          - !GetAtt MySecurityGroup.GroupId
+  
+    EC2TargetGroup:
+      Type: AWS::ElasticLoadBalancingV2::TargetGroup
+      Properties:   
+        Name: EC2TargetGroup
+        Port: 80
+        Protocol: HTTP
+        Targets:
+        - Id: !Ref MyEC2Instance
+          Port: 80
+        VpcId: vpc-a26dcec9
+        Tags:
+        - Key: Name
+          Value: EC2TargetGroup
+        - Key: Port
+          Value: 80
+
+  
