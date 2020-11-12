@@ -1,0 +1,19 @@
+Mappings: 
+  RDSConfigMap: 
+    Storage: 
+      "dev": "2"
+      "stage": "10"
+      "prod": "20"
+    InstanceType: 
+      "dev": "db.t2.small"
+      "stage": "db.t3.medium"
+      "prod": "db.m4.large"
+
+Resources: 
+  MyRDSInstance: 
+    Type: AWS::RDS::DBInstance 
+    Properties: 
+      AllocatedStorage: !FindInMap [RDSConfigMap, Storage, prod]
+      Engine: 
+
+
