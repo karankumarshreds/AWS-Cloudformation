@@ -18,7 +18,7 @@ X.X.X.0/24   // 24/8 = 3 Network Bits
 X.X.0.0/16   // 16/8 = 2 Network Bits 
 X.0.0.0/8    // 8/8  = 1 Network Bit  
 ```
-<img with="300" src="https://github.com/karankumarshreds/AWS-Cloudformation/blob/master/img/cidr.PNG"/>
+<p align="center"><img with="600" src="https://github.com/karankumarshreds/AWS-Cloudformation/blob/master/img/cidr.PNG"/></p>
 
 #### Available IP ranges : 
 
