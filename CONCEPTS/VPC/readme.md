@@ -1,0 +1,14 @@
+# VPC
+
+### CIDR (Classless Inter Domain Routing)
+
+CIDR helps to assign IP addresses to our AWS components running inside a particular VPC.
+
+```x.x.x.x/16``` where ```16``` is the CIDR prefix which defines the number of available IP addresses that can be used in a VPC.
+
+***Example***: 
+
+```js
+10.10.0.0/16  
+```
+Since it has 16, the Network IP would be ```10.10.0.0``` and the AWS components would get IPS ranging from  ```10.10.0.0``` to ```10.10.255.255``` which means **65536** available IPS.
