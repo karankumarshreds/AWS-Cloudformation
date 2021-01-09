@@ -1,0 +1,30 @@
+# Parameters to be entered by the users while creating the stack
+Parameters: 
+
+  VpcName:
+    Description: Name for your VPC 
+    Type: String
+
+  KeyName: 
+    Description: Key Pair name to connect to take console login 
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: Must be a name of existing KeyPair
+  
+  InstanceType: 
+    Description: Choose the Instance Type 
+    Type: String 
+    Default: t2.micro 
+    AllowedValues: 
+    - t2.micro
+    - t2.small
+    ConstraintDescription: Must be valid instance type 
+
+# Resources that will be creating using this stack
+
+  CustomVPC:
+    Type: AWS::EC2::VPC 
+    Properties: 
+      CidrBlock: '10.0.0.0/16'
+      Tags: 
+        - Name: !Ref VpcName
+        
