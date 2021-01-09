@@ -1,6 +1,10 @@
 # Parameters to be entered by the users while creating the stack
 Parameters: 
 
+  ApplicationName: 
+    Description: Name of your application/project 
+    Type: String 
+
   VpcName:
     Description: Name for your VPC 
     Type: String
@@ -19,12 +23,28 @@ Parameters:
     - t2.small
     ConstraintDescription: Must be valid instance type 
 
-# Resources that will be creating using this stack
+#### #################################### ####
+####              RESOURCES               ####        
+#### #################################### ####
 
+  # Create a VPC with CIDR block range 
   CustomVPC:
     Type: AWS::EC2::VPC 
     Properties: 
       CidrBlock: '10.0.0.0/16'
       Tags: 
         - Name: !Ref VpcName
-        
+  # Create Internet Gateway for your public subnet 
+  InternetGateway: 
+    Type: AWS::EC2::InternetGateway
+    Properties: 
+      Tags:
+        - Name: !Sub '${ApplicationName}-IGW'
+  # Attach the above IGW with your VPC 
+  InternetGatewayAttach: 
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: 
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref CustomVPC
+      
+
