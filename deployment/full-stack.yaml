@@ -9,42 +9,66 @@ Parameters:
     Description: Name for your VPC 
     Type: String
 
-  KeyName: 
-    Description: Key Pair name to connect to take console login 
-    Type: AWS::EC2::KeyPair::KeyName
-    ConstraintDescription: Must be a name of existing KeyPair
+  # KeyName: 
+  #   Description: Key Pair name to connect to take console login 
+  #   Type: AWS::EC2::KeyPair::KeyName
+  #   ConstraintDescription: Must be a name of existing KeyPair
   
-  InstanceType: 
-    Description: Choose the Instance Type 
-    Type: String 
-    Default: t2.micro 
-    AllowedValues: 
-    - t2.micro
-    - t2.small
-    ConstraintDescription: Must be valid instance type 
+  # InstanceType: 
+  #   Description: Choose the Instance Type 
+  #   Type: String 
+  #   Default: t2.micro 
+  #   AllowedValues: 
+  #   - t2.micro
+  #   - t2.small
+  #   ConstraintDescription: Must be valid instance type 
+ 
 
 #### #################################### ####
 ####              RESOURCES               ####        
 #### #################################### ####
-
+Resources: 
   # Create a VPC with CIDR block range 
   CustomVPC:
     Type: AWS::EC2::VPC 
     Properties: 
       CidrBlock: '10.0.0.0/16'
       Tags: 
-        - Name: !Ref VpcName
+        - Key: Name 
+          Value: !Ref VpcName
+
   # Create Internet Gateway for your public subnet 
   InternetGateway: 
     Type: AWS::EC2::InternetGateway
     Properties: 
       Tags:
-        - Name: !Sub '${ApplicationName}-IGW'
+        - Key: Name 
+          Value: !Sub '${ApplicationName}-IGW'
+
   # Attach the above IGW with your VPC 
   InternetGatewayAttach: 
     Type: AWS::EC2::VPCGatewayAttachment
     Properties: 
       InternetGatewayId: !Ref InternetGateway
       VpcId: !Ref CustomVPC
+
+  # Public Subnet for your VPC 
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      VpcId: !Ref CustomVPC
+      # AvailabilityZone: { "Fn::GetAtt" : [ "mySubnet", "AvailabilityZone" ] }
+      AvailabilityZone: 
+        Fn::Select: 
+          - 0
+          - Fn::GetAZs: ""
+      CidrBlock: '10.0.0.0/24'
+      MapPublicIpOnLaunch: true
+      Tags: 
+        - Key: Name 
+          Value: !Sub '${ApplicationName}-Public-Subnet'
+
+
+
       
 
