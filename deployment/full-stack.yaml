@@ -109,6 +109,8 @@ Resources:
   # NAT gateway needs an EIP to represent your private subnet to the world 
   NatElasticIP: 
     Type: AWS::EC2::EIP 
+    # We want it to be created only when the VPC is created 
+    DependsOn: CustomVPC
     Properties: 
       Domain: vpc 
   # Create NAT and Assign this IP to it
@@ -119,6 +121,9 @@ Resources:
     Properties: 
       AllocationId: !GetAtt NatElasticIP.AllocationId
       SubnetId: !Ref PublicSubnet
+      Tags: 
+        - Key: Name 
+          Value: !Sub '${VpcName}-NAT'
   # Route table for your private subnet 
   PrivateRouteTable: 
     Type: AWS::EC2::RouteTable
@@ -141,12 +146,3 @@ Resources:
     Properties: 
       SubnetId: !Ref PrivateSubnet
       RouteTableId: !Ref PrivateRouteTable
-
-
-  
-
-
-
-
-      
-
