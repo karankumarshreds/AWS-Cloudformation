@@ -28,6 +28,7 @@ Parameters:
 ####              RESOURCES               ####        
 #### #################################### ####
 Resources: 
+
   # Create a VPC with CIDR block range 
   CustomVPC:
     Type: AWS::EC2::VPC 
@@ -80,10 +81,10 @@ Resources:
     DependsOn: InternetGatewayAttach
     Properties: 
       RouteTableId: !Ref PublicRouteTable
-      DestinationCidrBlock: 0.0.0.0./0
+      DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
   # Associate this route table to your public subnet 
-  SubnetRouteTableAssociation: 
+  PublicSubnetRouteTableAssociation: 
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties: 
       SubnetId: !Ref PublicSubnet
@@ -104,6 +105,44 @@ Resources:
       Tags: 
         - Key: Name 
           Value: !Sub '${VpcName}-Private-Subnet'
+  # Create a NAT Gateway for your private route to connect to internet 
+  # NAT gateway needs an EIP to represent your private subnet to the world 
+  NatElasticIP: 
+    Type: AWS::EC2::EIP 
+    Properties: 
+      Domain: vpc 
+  # Create NAT and Assign this IP to it
+  NatGateway: 
+    Type: AWS::EC2::NatGateway
+    # NatGateway will only be created AFTER creation of NatElasticIP
+    DependsOn: NatElasticIP 
+    Properties: 
+      AllocationId: !GetAtt NatElasticIP.AllocationId
+      SubnetId: !Ref PublicSubnet
+  # Route table for your private subnet 
+  PrivateRouteTable: 
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      VpcId: !Ref CustomVPC
+      Tags: 
+        - Key: Name 
+          Value: !Sub '${VpcName}-Private-RT'
+  # Add route to this which says 0.0.0.0/0 to be communicated via NAT 
+  PrivateRoute: 
+    Type: AWS::EC2::Route 
+    DependsOn: NatGateway
+    Properties: 
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref NatGateway
+  # Associate the route table with private subnet
+  PrivateSubnetRouteTableAssociation: 
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      SubnetId: !Ref PrivateSubnet
+      RouteTableId: !Ref PrivateRouteTable
+
+
   
 
 
