@@ -9,19 +9,27 @@ Parameters:
     Description: Name for your VPC 
     Type: String
 
-  # KeyName: 
-  #   Description: Key Pair name to connect to take console login 
-  #   Type: AWS::EC2::KeyPair::KeyName
-  #   ConstraintDescription: Must be a name of existing KeyPair
+  KeyName: 
+    Description: Key Pair name to connect to take console login 
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: Must be a name of existing KeyPair
   
-  # InstanceType: 
-  #   Description: Choose the Instance Type 
-  #   Type: String 
-  #   Default: t2.micro 
-  #   AllowedValues: 
-  #   - t2.micro
-  #   - t2.small
-  #   ConstraintDescription: Must be valid instance type 
+  PublicInstanceType: 
+    Description: Choose the Public Instance Type 
+    Type: String 
+    Default: t2.micro 
+    AllowedValues: 
+    - t2.micro
+    - t2.small
+    ConstraintDescription: Must be valid instance type 
+  PrivateInstanceType: 
+    Description: Choose the Private Instance Type 
+    Type: String 
+    Default: t2.micro 
+    AllowedValues: 
+    - t2.micro
+    - t2.small
+    ConstraintDescription: Must be valid instance type 
  
 
 #### #################################### ####
@@ -113,7 +121,7 @@ Resources:
     DependsOn: CustomVPC
     Properties: 
       Domain: vpc 
-  # Create NAT and Assign this IP to it
+  # Create NAT in public subnet and assign above IP to it
   NatGateway: 
     Type: AWS::EC2::NatGateway
     # NatGateway will only be created AFTER creation of NatElasticIP
@@ -146,3 +154,22 @@ Resources:
     Properties: 
       SubnetId: !Ref PrivateSubnet
       RouteTableId: !Ref PrivateRouteTable
+
+  ############## Infrastructure Resources ###############
+
+  PublicInstanceSecurityGroup: 
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow public SSH and port 80 access
+      ## Ingress === inbound rules 
+      SecurityGroupIngress: 
+          - FromPort: 22
+            ToPort: 22
+            CidrIp: 0.0.0.0/0
+            IpProtocol: tcp 
+          - FromPort: 80
+            ToPort: 80
+            CidrIp: 0.0.0.0/0
+            IpProtocol: tcp
+      VpcId:
+        Ref: !CustomVPC
