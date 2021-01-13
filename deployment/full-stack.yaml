@@ -155,7 +155,9 @@ Resources:
       SubnetId: !Ref PrivateSubnet
       RouteTableId: !Ref PrivateRouteTable
 
-  ############## Infrastructure Resources ###############
+  #### #################################### ####
+  ####       Infrastructure Resources       ####
+  #### #################################### ####
 
   PublicInstanceSecurityGroup: 
     Type: AWS::EC2::SecurityGroup
@@ -173,3 +175,23 @@ Resources:
             IpProtocol: tcp
       VpcId:
         Ref: !CustomVPC
+  
+  ############# Launch Template #############
+  PublicLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties: 
+      LaunchTemplateName: !Sub '${ApplicationName}-Public-LT'
+      LaunchTemplateData:
+        NetworkInterfaces:
+          - DeviceIndex: 0
+            AssociatePublicIpAddress: true
+            Groups:
+              - !GetAtt PublicInstanceSecurityGroup.GroupId 
+            DeleteOnTermination: true
+        Placement: 
+          Tenancy: default 
+        ImageId: #### To be reffered via EC2 instance AMI ####
+        InstanceType: !Ref PublicInstanceType
+        KeyName: !Ref KeyName
+
+  
