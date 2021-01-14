@@ -1,19 +1,130 @@
-Mappings: 
-  RDSConfigMap: 
-    Storage: 
-      "dev": "2"
-      "stage": "10"
-      "prod": "20"
-    InstanceType: 
-      "dev": "db.t2.small"
-      "stage": "db.t3.medium"
-      "prod": "db.m4.large"
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Description": "AWS CloudFormation Sample Template for creating an Amazon RDS DB instance: 
+  Sample template showing how to create a DB instance with Enhanced Monitoring enabled. 
+  **WARNING** This template creates an RDS DB instance. You will be billed for the AWS 
+  resources used if you create a stack from this template.
+Metadata:
+  'AWS::CloudFormation::Interface':
+    ParameterGroups:
+    - Label:
+        default: 'SG Parameters'
+      Parameters:
+      - ParentVPCStack
+      - EC2SecurityStack
+Parameters:
+  ParentVPCStack:
+    Description: 'Parent Stack Name'
+    Type: String
+    Default: 'test-vpc'
+  EC2SecurityStack:
+    Description: 'EC2 Stack Name'
+    Type: String
+    Default: 'test-ec2'
+  # DBInstanceID:
+  #   Default: mydbinstance
+  #   Description: My database instance
+  #   Type: String
+  #   MinLength: '1'
+  #   MaxLength: '63'
+  #   AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+  #   ConstraintDescription: >-
+  #     Must begin with a letter and must not end with a hyphen or contain two
+  #     consecutive hyphens.
+  DBName:
+    Default: mydb
+    Description: My database
+    Type: String
+    MinLength: '1'
+    MaxLength: '64'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: Must begin with a letter and contain only alphanumeric characters.
+  DBInstanceClass:
+    Default: db.t3.small
+    Description: DB instance class
+    Type: String
+    ConstraintDescription: Must select a valid DB instance type.
+  DBAllocatedStorage:
+    Default: '20'
+    Description: The size of the database (GiB)
+    Type: Number
+    MinValue: '5'
+    MaxValue: '1024'
+    ConstraintDescription: must be between 20 and 65536 GiB.
+  DBUsername:
+    Default: 'dbusername'
+    NoEcho: 'true'
+    Description: Username for postgres database access
+    Type: String
+    MinLength: '1'
+    MaxLength: '16'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+  DBPassword:
+    Default: 'dnpassword'
+    NoEcho: 'true'
+    Description: Password postgres database access
+    Type: String
+    MinLength: '8'
+    MaxLength: '41'
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+Resources:
+  rdsDBSubnetGroup:
+    Type: 'AWS::RDS::DBSubnetGroup'
+    Properties:
+      DBSubnetGroupDescription: Subnets for RDS
+      SubnetIds:
+      - {'Fn::ImportValue': !Sub '${ParentVPCStack}-SubnetBPrivate'}
+      - {'Fn::ImportValue': !Sub '${ParentVPCStack}-SubnetAPrivate'}
+  MyDB:
+    Type: 'AWS::RDS::DBInstance'
+    Properties:
+      #DBInstanceIdentifier: !Ref DBInstanceID
+      DBName: !Ref DBName
+      DBInstanceClass: !Ref DBInstanceClass
+      AllocatedStorage: !Ref DBAllocatedStorage
+      Engine: postgres
+      EngineVersion: 12.4
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      DBSubnetGroupName: {'Fn::ImportValue': !Sub '${ParentVPCStack}-SubnetBPrivate'}
+      DBSecurityGroups:
+      -  !Ref DBSecurityGroups
+      StorageType: gp2
+#  DBSecurityGroups:
+#    Type: 'AWS::EC2::SecurityGroup'
+#    Properties:
+#      GroupDescription: Allow http to client host
+#      VpcId: {'Fn::ImportValue': !Sub '${ParentVPCStack}-VPC'}
+#      SecurityGroupIngress:
+#      - IpProtocol: tcp
+#        FromPort: 5432
+#        ToPort: 5432
+#        CidrIp: {'Fn::ImportValue': !Sub '${EC2SecurityStack}-SGId'}
+#      SecurityGroupEgress:
+#        - IpProtocol: -1
+#          CidrIp: 0.0.0.0/0
 
-Resources: 
-  MyRDSInstance: 
-    Type: AWS::RDS::DBInstance 
+# This is how you write SG to allow another SG  
+  DBSecurityGroups:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Allow http to client host
+      VpcId: {'Fn::ImportValue': !Sub '${ParentVPCStack}-VPC'}
+  InboundRule:
+    Type: 'AWS::EC2::SecurityGroupIngress'
     Properties: 
-      AllocatedStorage: !FindInMap [RDSConfigMap, Storage, prod]
-      Engine: 
+      GroupId: !GetAtt DBSecurityGroups.GroupId
+      IpProtocol: tcp
+      FromPort: 5432
+      ToPort: 5432
+      SourceSecurityGroupId: {'Fn::ImportValue': !Sub '${EC2SecurityStack}-SGId'}
 
 
+Outputs:
+  Hostname:
+    Value: !GetAtt [MyDB, Endpoint.Address]
+    Export:
+      Name: !Sub '${AWS::StackName}-HostName' 
+  

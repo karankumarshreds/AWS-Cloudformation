@@ -184,62 +184,61 @@ Resources:
             ToPort: 80
             CidrIp: 0.0.0.0/0
             IpProtocol: tcp
-      VpcId:
-        Ref: !CustomVPC
+      VpcId: !Ref CustomVPC
   
   ############# Launch Template #############
-  PublicLaunchTemplate:
-    Type: AWS::EC2::LaunchTemplate
-    Properties: 
-      LaunchTemplateName: !Sub '${ApplicationName}-Public-LT'
-      LaunchTemplateData:
-        NetworkInterfaces:
-          - DeviceIndex: 0
-            AssociatePublicIpAddress: true
-            Groups:
-              - !GetAtt PublicInstanceSecurityGroup.GroupId 
-            DeleteOnTermination: true
-        Placement: 
-          Tenancy: default 
-        ImageId: #### To be reffered via EC2 instance AMI ####
-        InstanceType: !Ref PublicInstanceType
-        KeyName: !Ref KeyName
+  # PublicLaunchTemplate:
+  #   Type: AWS::EC2::LaunchTemplate
+  #   Properties: 
+  #     LaunchTemplateName: !Sub '${ApplicationName}-Public-LT'
+  #     LaunchTemplateData:
+  #       NetworkInterfaces:
+  #         - DeviceIndex: 0
+  #           AssociatePublicIpAddress: true
+  #           Groups:
+  #             - !GetAtt PublicInstanceSecurityGroup.GroupId 
+  #           DeleteOnTermination: true
+  #       Placement: 
+  #         Tenancy: default 
+  #       ImageId: #### To be reffered via EC2 instance AMI ####
+  #       InstanceType: !Ref PublicInstanceType
+  #       KeyName: !Ref KeyName
 
   # Creating AMI using custom EC2
   # Completes when the instance is fully provisioned and ready for AMI creation.
-  AMICreate:
-    Type: AWS::CloudFormation::WaitCondition
-    CreationPolicy:
-      ResourceSignal:
-        Timeout: PT10M
+  # AMICreate:
+  #   Type: AWS::CloudFormation::WaitCondition
+  #   CreationPolicy:
+  #     ResourceSignal:
+  #       Timeout: PT20M
 
   PublicInstance: 
     Type: AWS::EC2::Instance 
     Properties: 
       ImageId: !Ref PublicImageId
       InstanceType: !Ref PublicInstanceType
-      UserData: 
-        "Fn::Base64": !Sub |
-          #!/bin/bash -x
-          touch test_file 
-          ### this is a notification to tell above steps have been completed ###
-          /opt/aws/bin/cfn-signal \
-            -e $? \
-            --stack ${AWS::StackName} \
-            --region ${AWS::Region} \
-            --resource AMICreate 
-          shutdown -h now
+      # UserData: 
+      #   "Fn::Base64": !Sub |
+      #     #!/bin/bash -x
+      #     touch test_file 
+      #     ### this is a notification to tell above steps have been completed ###
+      #     /opt/aws/bin/cfn-signal \
+      #       -e $? \
+      #       --stack ${AWS::StackName} \
+      #       --region ${AWS::Region} \
+      #       --resource AMICreate 
+      #     shutdown -h now
     
-    AMI:
-      Type: Custom::AMI
-      DependsOn: AMICreate
-      Properties:
-        ## Using a custom Lambda funciton to create an AMI 
-        ServiceToken: !GetAtt AMIFunction.Arn ## how to create 
-        InstanceId: !Ref PublicInstance ## which instance to use 
+  AMI:
+    Type: Custom::AMI
+    # DependsOn: AMICreate
+    Properties:
+      ## Using a custom Lambda funciton to create an AMI 
+      ServiceToken: !GetAtt AMIFunction.Arn ## how to create 
+      InstanceId: !Ref PublicInstance ## which instance to use 
 
-    ## Lambda function to create the AMI
-    AMIFunction:
+  ## Lambda function to create the AMI
+  AMIFunction:
     Type: AWS::Lambda::Function
     Properties:
       Handler: index.handler
@@ -314,6 +313,33 @@ Resources:
               ).then((data)=>success({})).catch((err)=>failed(err));
             }
           };
-      Runtime: nodejs4.3
+      Runtime: nodejs12.x
       Timeout: 300
-  
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal: {Service: [lambda.amazonaws.com]}
+          Action: ['sts:AssumeRole']
+      Path: /
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaRole
+      Policies:
+      - PolicyName: EC2Policy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+              - 'ec2:DescribeInstances'
+              - 'ec2:DescribeImages'
+              - 'ec2:CreateImage'
+              - 'ec2:DeregisterImage'
+              - 'ec2:DescribeSnapshots'
+              - 'ec2:DeleteSnapshot'
+              Resource: ['*']
